@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db"; 
 import { openAPI } from 'better-auth/plugins'
 import * as schema from "@/db/schema"; 
+import { sendEmail } from '@/lib/email';
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -10,8 +11,19 @@ export const auth = betterAuth({
         schema
     }),
     emailAndPassword: {
-        enabled: true
+        enabled: true,
+        requireEmailVerification: true
     },
+    emailVerification: {
+        sendOnSignUp: true,
+        sendVerificationEmail: async ({ user, url, token }, request) => {
+          await sendEmail({
+            to: user.email,
+            subject: 'Verify your email address',
+            text: `Click the link to verify your email: ${url}`,
+          });
+        },
+      },
     plugins: [
         openAPI()
     ]
