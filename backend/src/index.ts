@@ -1,25 +1,24 @@
-import { Hono } from 'hono';
-import { auth } from './lib/auth';
-import { cors } from 'hono/cors';
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { auth } from "@/lib/auth";
+import posts from "@/routes/post.routes";
+import { errorHandler } from "@/middleware/error-handler.middleware";
 
 const app = new Hono();
 
-app.use(
-  '/api/auth/*', // or replace with "*" to enable cors for all routes
-  cors({
-    origin: 'http://localhost:3000', // replace with your origin
-    allowHeaders: ['Content-Type', 'Authorization'],
-    allowMethods: ['POST', 'GET', 'OPTIONS'],
-    exposeHeaders: ['Content-Length'],
-    maxAge: 600,
-    credentials: true,
-  })
-);
+app.onError(errorHandler);
 
-app
-  .on(['POST', 'GET'], '/api/auth/**', (c) => auth.handler(c.req.raw))
-  .get('/', (c) => {
-    return c.text('Hello Hono!');
-  });
+app.use("/*", cors());
 
-export default app;
+app.on(["POST", "GET"], "/api/auth/*", (c) => {
+  return auth.handler(c.req.raw);
+});
+
+app.route("/api/posts", posts);
+
+app.get("/health", (c) => c.json({ status: "ok" }));
+
+export default {
+  port: 3000,
+  fetch: app.fetch,
+};

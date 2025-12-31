@@ -8,6 +8,20 @@
       "when": 1767193192226,
       "tag": "0000_naive_supernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767196069063,
+      "tag": "0001_striped_black_bird",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767217220498,
+      "tag": "0002_naive_amazoness",
+      "breakpoints": true
     }
   ]
 }
