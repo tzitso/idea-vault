@@ -15,47 +15,47 @@ export class HttpError extends Error {
 }
 
 export function errorHandler(err: Error, c: Context): Response {
-  console.error("Error:", err);
-
-  if (err instanceof HttpError) {
-    return c.json(
-      {
-        success: false,
-        error: err.message,
-      },
-      err.statusCode as any
-    );
-  }
-
-  if (err instanceof HTTPException) {
+    console.error("Error:", err);
+  
+    if (err instanceof HttpError) {
+      return c.json<ApiResponse>(
+        {
+          success: false,
+          error: err.message,
+        },
+        err.statusCode as any
+      );
+    }
+  
+    if (err instanceof HTTPException) {
+      return c.json<ApiResponse>(
+        {
+          success: false,
+          error: err.message,
+        },
+        err.status as any
+      );
+    }
+  
+    if (err instanceof ZodError) {
+      return c.json<ApiResponse>(
+        {
+          success: false,
+          error: "Validation failed",
+          details: err.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        400 as any
+      );
+    }
+  
     return c.json<ApiResponse>(
       {
         success: false,
-        error: err.message,
+        error: "Internal server error",
       },
-      err.status
+      500 as any
     );
   }
-
-  if (err instanceof ZodError) {
-    return c.json<ApiResponse>(
-      {
-        success: false,
-        error: "Validation failed",
-        details: err.issues.map((e) => ({
-          path: e.path.join("."),
-          message: e.message,
-        })) as any,
-      },
-      400
-    );
-  }
-
-  return c.json<ApiResponse>(
-    {
-      success: false,
-      error: "Internal server error",
-    },
-    500
-  );
-}

@@ -111,51 +111,6 @@ export class PostService {
     }));
   }
 
-  static async watchPost(userId: string, postId: string): Promise<void> {
-    // Check if post exists and is locked
-    const [postData] = await db
-      .select({ status: post.status })
-      .from(post)
-      .where(eq(post.id, postId))
-      .limit(1);
-
-    if (!postData) {
-      throw new HttpError("Post not found", 404);
-    }
-
-    if (postData.status !== "locked") {
-      throw new HttpError("Can only watch locked posts", 400);
-    }
-
-    // Check if already watching
-    const [existing] = await db
-      .select()
-      .from(watcher)
-      .where(and(eq(watcher.userId, userId), eq(watcher.postId, postId)))
-      .limit(1);
-
-    if (existing) {
-      throw new HttpError("Already watching this post", 400);
-    }
-
-    // Add to watchlist
-    await db.insert(watcher).values({
-      userId,
-      postId,
-    });
-  }
-
-  static async unwatchPost(userId: string, postId: string): Promise<void> {
-    const result = await db
-      .delete(watcher)
-      .where(and(eq(watcher.userId, userId), eq(watcher.postId, postId)))
-      .returning();
-
-    if (result.length === 0) {
-      throw new HttpError("Not watching this post", 404);
-    }
-  }
-
   static async create(input: CreatePostInput): Promise<PostWithAuthor> {
     const { authorId, title, content, unlockAt, tags = [] } = input;
 
@@ -230,13 +185,73 @@ export class PostService {
         .innerJoin(user, eq(post.authorId, user.id))
         .where(eq(post.id, newPost.id));
 
-      return postWithAuthor;
+      // Fetch tags for the new post
+      const postTags = await tx
+        .select({
+          tagId: tag.id,
+          tagName: tag.name,
+        })
+        .from(postTag)
+        .innerJoin(tag, eq(postTag.tagId, tag.id))
+        .where(eq(postTag.postId, newPost.id));
+
+      return {
+        ...postWithAuthor,
+        id: postWithAuthor.id,
+        status: postWithAuthor.status as "locked" | "public" | "archived",
+        title: postWithAuthor.status === "locked" ? null : postWithAuthor.title,
+        content: postWithAuthor.status === "locked" ? null : postWithAuthor.content,
+        isLocked: postWithAuthor.status === "locked",
+        watchCount: 0,
+        tags: postTags.map((t) => ({
+          id: t.tagId,
+          name: t.tagName,
+        })),
+      };
     });
 
-    return {
-      ...result,
-      id: result.id,
-      status: result.status as "locked" | "public" | "archived",
-    };
+    return result;
+  }
+
+  static async watchPost(userId: string, postId: string): Promise<void> {
+    const [postData] = await db
+      .select({ status: post.status })
+      .from(post)
+      .where(eq(post.id, postId))
+      .limit(1);
+
+    if (!postData) {
+      throw new HttpError("Post not found", 404);
+    }
+
+    if (postData.status !== "locked") {
+      throw new HttpError("Can only watch locked posts", 400);
+    }
+
+    const [existing] = await db
+      .select()
+      .from(watcher)
+      .where(and(eq(watcher.userId, userId), eq(watcher.postId, postId)))
+      .limit(1);
+
+    if (existing) {
+      throw new HttpError("Already watching this post", 400);
+    }
+
+    await db.insert(watcher).values({
+      userId,
+      postId,
+    });
+  }
+
+  static async unwatchPost(userId: string, postId: string): Promise<void> {
+    const result = await db
+      .delete(watcher)
+      .where(and(eq(watcher.userId, userId), eq(watcher.postId, postId)))
+      .returning();
+
+    if (result.length === 0) {
+      throw new HttpError("Not watching this post", 404);
+    }
   }
 }

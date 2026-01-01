@@ -13,28 +13,28 @@ export interface GetAllPostsInput {
   status?: "locked" | "public" | "archived";
   limit: number;
   offset: number;
-  userId?: string; // To check if user is watching
+  userId?: string; // Added
 }
 
 export interface PostWithAuthor {
   id: string;
-  title: string | null; // null for locked posts
-  content: string | null; // null for locked posts
+  title: string | null; // Changed
+  content: string | null; // Changed
   status: "locked" | "public" | "archived";
   unlockAt: Date;
   unlockedAt: Date | null;
   viewCount: number;
-  watchCount: number; // How many users watching
-  isWatching?: boolean; // If current user is watching
+  watchCount: number; // Added
+  isWatching?: boolean; // Added
   createdAt: Date;
-  isLocked: boolean; // Helper flag
+  isLocked: boolean; // Added
   author: {
     id: string;
     name: string;
     username: string | null;
     image: string | null;
   };
-  tags?: Array<{
+  tags: Array<{
     id: string;
     name: string;
   }>;

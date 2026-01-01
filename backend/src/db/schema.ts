@@ -175,7 +175,6 @@ export const postTagRelations = relations(postTag, ({ one }) => ({
   }),
 }));
 
-// Watcher table
 export const watcher = pgTable(
   "watcher",
   {
