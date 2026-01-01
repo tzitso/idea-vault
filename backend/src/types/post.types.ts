@@ -18,16 +18,18 @@ export interface GetAllPostsInput {
 
 export interface PostWithAuthor {
   id: string;
-  title: string | null; // Changed
-  content: string | null; // Changed
+  title: string | null;
+  content: string | null;
   status: "locked" | "public" | "archived";
   unlockAt: Date;
   unlockedAt: Date | null;
   viewCount: number;
-  watchCount: number; // Added
-  isWatching?: boolean; // Added
+  watchCount: number;
+  likeCount: number; // Added
+  isWatching?: boolean;
+  isLiked?: boolean; // Added
   createdAt: Date;
-  isLocked: boolean; // Added
+  isLocked: boolean;
   author: {
     id: string;
     name: string;

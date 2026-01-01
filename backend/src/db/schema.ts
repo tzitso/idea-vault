@@ -206,10 +206,42 @@ export const watcherRelations = relations(watcher, ({ one }) => ({
   }),
 }));
 
+// Like table
+export const like = pgTable(
+  "like",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("like_userId_idx").on(table.userId),
+    index("like_postId_idx").on(table.postId),
+    index("like_unique_idx").on(table.userId, table.postId),
+  ],
+);
+
+export const likeRelations = relations(like, ({ one }) => ({
+  user: one(user, {
+    fields: [like.userId],
+    references: [user.id],
+  }),
+  post: one(post, {
+    fields: [like.postId],
+    references: [post.id],
+  }),
+}));
+
+export type Like = InferSelectModel<typeof like>;
+export type InsertLike = InferInsertModel<typeof like>;
+
 export type Watcher = InferSelectModel<typeof watcher>;
 export type InsertWatcher = InferInsertModel<typeof watcher>;
-
-// ============= TYPES =============
 
 export type User = InferSelectModel<typeof user>;
 export type InsertUser = InferInsertModel<typeof user>;

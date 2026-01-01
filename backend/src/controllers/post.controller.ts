@@ -85,4 +85,40 @@ export class PostController {
       data: { message: "Post removed from watchlist" },
     });
   }
+
+  static async getById(c: Context): Promise<Response> {
+    const postId = c.req.param("id");
+    const user = c.get("user") as { id: string } | undefined;
+
+    const post = await PostService.getById(postId, user?.id);
+
+    return c.json<ApiResponse>({
+      success: true,
+      data: post,
+    });
+  }
+
+  static async like(c: Context): Promise<Response> {
+    const user = c.get("user");
+    const postId = c.req.param("id");
+
+    await PostService.likePost(user.id, postId);
+
+    return c.json<ApiResponse>({
+      success: true,
+      data: { message: "Post liked" },
+    });
+  }
+
+  static async unlike(c: Context): Promise<Response> {
+    const user = c.get("user");
+    const postId = c.req.param("id");
+
+    await PostService.unlikePost(user.id, postId);
+
+    return c.json<ApiResponse>({
+      success: true,
+      data: { message: "Post unliked" },
+    });
+  }
 }

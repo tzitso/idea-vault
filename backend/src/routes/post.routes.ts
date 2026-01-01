@@ -9,14 +9,14 @@ const posts = new Hono();
 
 posts.onError(errorHandler);
 
-// GET /api/posts - Get all posts (cached for 60 seconds)
+// GET /api/posts - Get all posts
 posts.get(
   "/",
   cacheMiddleware({ ttl: 60000 }),
   PostController.getAll
 );
 
-// POST /api/posts - Create a new post (auth + rate limit: 10 per minute)
+// POST /api/posts - Create a new post
 posts.post(
   "/",
   authMiddleware,
@@ -24,18 +24,38 @@ posts.post(
   PostController.create
 );
 
-// POST /api/posts/:id/watch - Add post to watchlist (auth required)
+// GET /api/posts/:id - Get single post (with view count increment)
+posts.get(
+  "/:id",
+  PostController.getById
+);
+
+// POST /api/posts/:id/watch - Add to watchlist
 posts.post(
   "/:id/watch",
   authMiddleware,
   PostController.watch
 );
 
-// DELETE /api/posts/:id/watch - Remove post from watchlist (auth required)
+// DELETE /api/posts/:id/watch - Remove from watchlist
 posts.delete(
   "/:id/watch",
   authMiddleware,
   PostController.unwatch
+);
+
+// POST /api/posts/:id/like - Like a post
+posts.post(
+  "/:id/like",
+  authMiddleware,
+  PostController.like
+);
+
+// DELETE /api/posts/:id/like - Unlike a post
+posts.delete(
+  "/:id/like",
+  authMiddleware,
+  PostController.unlike
 );
 
 export default posts;
